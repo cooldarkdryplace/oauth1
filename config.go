@@ -54,48 +54,63 @@ func NewClient(ctx context.Context, config *Config, token *Token) *http.Client {
 	return &http.Client{Transport: transport}
 }
 
+type Credentials struct {
+	OAuthToken  string
+	TokenSecret string
+	LoginURL    string
+}
+
 // RequestToken obtains a Request token and secret (temporary credential) by
 // POSTing a request (with oauth_callback in the auth header) to the Endpoint
 // RequestTokenURL. The response body form is validated to ensure
 // oauth_callback_confirmed is true. Returns the request token and secret
 // (temporary credentials).
 // See RFC 5849 2.1 Temporary Credentials.
-func (c *Config) RequestToken() (requestToken, requestSecret string, err error) {
+func (c *Config) RequestToken() (Credentials, error) {
 	req, err := http.NewRequest("POST", c.Endpoint.RequestTokenURL, nil)
 	if err != nil {
-		return "", "", err
+		return Credentials{}, err
 	}
 	err = newAuther(c).setRequestTokenAuthHeader(req)
 	if err != nil {
-		return "", "", err
+		return Credentials{}, err
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", "", err
+		return Credentials{}, err
 	}
 	// when err is nil, resp contains a non-nil resp.Body which must be closed
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return "", "", fmt.Errorf("oauth1: Server returned status %d", resp.StatusCode)
+		return Credentials{}, fmt.Errorf("oauth1: Server returned status %d", resp.StatusCode)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", err
+		return Credentials{}, err
 	}
 	// ParseQuery to decode URL-encoded application/x-www-form-urlencoded body
 	values, err := url.ParseQuery(string(body))
 	if err != nil {
-		return "", "", err
+		return Credentials{}, err
 	}
-	requestToken = values.Get(oauthTokenParam)
-	requestSecret = values.Get(oauthTokenSecretParam)
+	requestToken := values.Get(oauthTokenParam)
+	requestSecret := values.Get(oauthTokenSecretParam)
+	loginURL := values.Get("login_url")
+
 	if requestToken == "" || requestSecret == "" {
-		return "", "", errors.New("oauth1: Response missing oauth_token or oauth_token_secret")
+		return Credentials{}, errors.New("oauth1: Response missing oauth_token or oauth_token_secret")
 	}
 	if values.Get(oauthCallbackConfirmedParam) != "true" {
-		return "", "", errors.New("oauth1: oauth_callback_confirmed was not true")
+		return Credentials{}, errors.New("oauth1: oauth_callback_confirmed was not true")
 	}
-	return requestToken, requestSecret, nil
+
+	creds := Credentials{
+		OAuthToken:  requestToken,
+		TokenSecret: requestSecret,
+		LoginURL:    loginURL,
+	}
+
+	return creds, nil
 }
 
 // AuthorizationURL accepts a request token and returns the *url.URL to the
