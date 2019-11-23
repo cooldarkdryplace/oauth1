@@ -105,10 +105,10 @@ func TestConfigRequestToken(t *testing.T) {
 			RequestTokenURL: server.URL,
 		},
 	}
-	requestToken, requestSecret, err := config.RequestToken()
+	creds, err := config.RequestToken()
 	assert.Nil(t, err)
-	assert.Equal(t, expectedToken, requestToken)
-	assert.Equal(t, expectedSecret, requestSecret)
+	assert.Equal(t, expectedToken, creds.OAuthToken)
+	assert.Equal(t, expectedSecret, creds.TokenSecret)
 }
 
 func TestConfigRequestToken_InvalidRequestTokenURL(t *testing.T) {
@@ -117,10 +117,10 @@ func TestConfigRequestToken_InvalidRequestTokenURL(t *testing.T) {
 			RequestTokenURL: "http://wrong.com/oauth/request_token",
 		},
 	}
-	requestToken, requestSecret, err := config.RequestToken()
+	creds, err := config.RequestToken()
 	assert.NotNil(t, err)
-	assert.Equal(t, "", requestToken)
-	assert.Equal(t, "", requestSecret)
+	assert.Equal(t, "", creds.OAuthToken)
+	assert.Equal(t, "", creds.TokenSecret)
 }
 
 func TestConfigRequestToken_CallbackNotConfirmed(t *testing.T) {
@@ -138,12 +138,12 @@ func TestConfigRequestToken_CallbackNotConfirmed(t *testing.T) {
 			RequestTokenURL: server.URL,
 		},
 	}
-	requestToken, requestSecret, err := config.RequestToken()
+	creds, err := config.RequestToken()
 	if assert.Error(t, err) {
 		assert.Equal(t, "oauth1: oauth_callback_confirmed was not true", err.Error())
 	}
-	assert.Equal(t, "", requestToken)
-	assert.Equal(t, "", requestSecret)
+	assert.Equal(t, "", creds.OAuthToken)
+	assert.Equal(t, "", creds.TokenSecret)
 }
 
 func TestConfigRequestToken_CannotParseBody(t *testing.T) {
@@ -155,12 +155,12 @@ func TestConfigRequestToken_CannotParseBody(t *testing.T) {
 			RequestTokenURL: server.URL,
 		},
 	}
-	requestToken, requestSecret, err := config.RequestToken()
+	creds, err := config.RequestToken()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "invalid URL escape")
 	}
-	assert.Equal(t, "", requestToken)
-	assert.Equal(t, "", requestSecret)
+	assert.Equal(t, "", creds.OAuthToken)
+	assert.Equal(t, "", creds.TokenSecret)
 }
 
 func TestConfigRequestToken_MissingTokenOrSecret(t *testing.T) {
@@ -175,12 +175,12 @@ func TestConfigRequestToken_MissingTokenOrSecret(t *testing.T) {
 			RequestTokenURL: server.URL,
 		},
 	}
-	requestToken, requestSecret, err := config.RequestToken()
+	creds, err := config.RequestToken()
 	if assert.Error(t, err) {
 		assert.Equal(t, "oauth1: Response missing oauth_token or oauth_token_secret", err.Error())
 	}
-	assert.Equal(t, "", requestToken)
-	assert.Equal(t, "", requestSecret)
+	assert.Equal(t, "", creds.OAuthToken)
+	assert.Equal(t, "", creds.TokenSecret)
 }
 
 func TestAuthorizationURL(t *testing.T) {
