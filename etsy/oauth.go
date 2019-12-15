@@ -39,7 +39,7 @@ func NewOAuth(ck, ss string) *OAuth {
 func (oa *OAuth) Login(ctx context.Context) (oauth1.Credentials, error) {
 	creds, err := oa.config.RequestToken()
 	if err != nil {
-		return oauth1.Credentials{}, fmt.Errorf("failed to get temp creds: %s", err)
+		return oauth1.Credentials{}, fmt.Errorf("failed to get temp creds: %w", err)
 	}
 
 	return creds, nil
@@ -54,7 +54,7 @@ type CallbackParams struct {
 func (oa *OAuth) CompleteLogin(ctx context.Context, params CallbackParams) (TokenDetails, error) {
 	accessToken, accessSecret, err := oa.config.AccessToken(params.Token, params.TokenSecret, params.Verifier)
 	if err != nil {
-		return TokenDetails{}, fmt.Errorf("failed to get AccessToken: %s", err)
+		return TokenDetails{}, fmt.Errorf("failed to get AccessToken: %w", err)
 	}
 
 	details := TokenDetails{
