@@ -5,17 +5,6 @@ import (
 	"net/http"
 )
 
-type userInfo struct {
-	ID        int64  `json:"user_id"`
-	LoginName string `json:"login_name"`
-}
-
-type userInfoResponse struct {
-	Count   int        `json:"count"`
-	Results []userInfo `json:"results"`
-	Type    string     `json:"type"`
-}
-
 type EtsyClient struct {
 	oauth *OAuth
 }
