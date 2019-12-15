@@ -22,9 +22,10 @@ type OAuth struct {
 	config oauth1.Config
 }
 
-func NewOAuth(ck, ss string) *OAuth {
+func NewOAuth(ck, ss, uri string) *OAuth {
 	return &OAuth{
 		config: oauth1.Config{
+			CallbackURL:    uri,
 			ConsumerKey:    ck,
 			ConsumerSecret: ss,
 			Endpoint: oauth1.Endpoint{
